@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+type: Opaque
+data:
+  APP_ENV: ZGV2ZWxvcG1lbnQ=
+  APP_PORT: NTAwMQ==
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mypv-gcp
+spec:
+  storageClassName: "standard"
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data/volume
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nodejs-gcp-statefull
+spec:
+  selector:
+    matchLabels:
+      name: nodejs-gcp-statefull
+  serviceName: nodejs-gcp-statefull-service
+  replicas: 5
+  volumeClaimTemplates:
+    - metadata:
+        name: mypv-gcp-nodejs-statefull-calim
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 2Gi
+  template:
+    metadata:
+      name: nodejs-gcp-statefull
+      labels:
+        name: nodejs-gcp-statefull
+    spec:
+      containers:
+        - name: nodejs-gcp-statefull
+          image: sholehbaktiabadi/gcp-test-root:latest
+          volumeMounts:
+            - name: mypv-gcp-nodejs-statefull-calim
+              mountPath: /app/data
+          env: 
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          envFrom:
+            - secretRef: 
+                name: app-secret

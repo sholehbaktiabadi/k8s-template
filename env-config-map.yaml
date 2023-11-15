@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nodejs-env-config
+data:
+  APP_PORT: "5001"
+  APP_ENV: development
+
+---
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: gcp-test-root
+spec:
+  replicas: 2
+  selector: 
+    matchLabels:
+      name: gcp-test-root
+  template:
+    metadata:
+      name: gcp-test-root
+      labels:
+        name: gcp-test-root
+    spec:
+      containers: 
+        - name: gcp-test-root
+          image: sholehbaktiabadi/gcp-test-root:latest
+          envFrom: 
+            - configMapRef:
+                name: nodejs-env-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  type: NodePort
+  selector:
+    name: gcp-test-root
+  ports:
+    - port: 5001
+      targetPort: 5001
+      nodePort: 30001
+  

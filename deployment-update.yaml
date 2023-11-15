@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nodejs-gcp-secret
+type: Opaque
+data:
+  APP_PORT: NTAwMQ==
+  APP_ENV: ZGV2ZWxvcG1lbnQ=
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs-gcp
+  labels:
+    name: nodejs-gcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: nodejs-gcp
+  template:
+    metadata:
+      name: nodejs-gcp
+      labels:
+        name: nodejs-gcp
+    spec:
+      containers:
+        - name: nodejs-gcp
+          image: sholehbaktiabadi/gcp-test-root:latest
+          resources:
+            limits:
+              memory: "5Gi"
+              cpu: "5000m"
+          envFrom: 
+            - secretRef:  
+                name: nodejs-gcp-secret
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  type: NodePort
+  selector:
+    name: nodejs-gcp
+  ports:
+    - port: 5001
+      targetPort: 5001
+      nodePort: 30001
+
+  
+
